@@ -1,0 +1,67 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: media-savant-redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+    container_name: media-savant-api
+    environment:
+      - APP_PORT=4001
+      - REDIS_URL=redis://redis:6379
+      - SESSION_COOKIE_NAME=ms_session
+      - SESSION_COOKIE_SECURE=false
+      - RATE_LIMIT_PER_SECOND=5
+      - RATE_LIMIT_BURST=20
+      - JELLYFIN_CLIENT_NAME=mdia-savant
+      - JELLYFIN_DEVICE_NAME=mdia-savant
+      - JELLYFIN_CLIENT_VERSION=0.1.0
+    ports:
+      - 4001:4001
+    depends_on:
+      - redis
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.media-savant-api.rule=Host(`savant.iamngonimedia.app`) && PathPrefix(`/api`)
+      - traefik.http.routers.media-savant-api.entrypoints=web
+    restart: unless-stopped
+
+  web-ui:
+    build:
+      context: ./web-ui
+      args:
+        - VITE_API_BASE_URL=/api
+    container_name: media-savant-web-ui
+    ports:
+      - 3000:80
+    depends_on:
+      - server
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.media-savant-web.rule=Host(`savant.iamngonimedia.app`)
+      - traefik.http.routers.media-savant-web.entrypoints=web
+    restart: unless-stopped
+
+volumes:
+  redis_data:
