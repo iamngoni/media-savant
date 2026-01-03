@@ -1,10 +1,18 @@
 import { defineConfig } from 'vite'
-import tsConfigPaths from 'vite-tsconfig-paths'
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import { nitro } from 'nitro/vite'
 import react from '@vitejs/plugin-react'
+import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
+import path from 'path'
 
 export default defineConfig({
+  plugins: [
+    react(),
+    TanStackRouterVite(),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
     port: 3000,
     proxy: {
@@ -14,11 +22,8 @@ export default defineConfig({
       },
     },
   },
-  plugins: [
-    tsConfigPaths(),
-    tanstackStart(),
-    nitro({ preset: 'node' }),
-    // React plugin must come after TanStack Start
-    react(),
-  ],
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
 })
