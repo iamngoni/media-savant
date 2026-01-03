@@ -2,11 +2,11 @@
 node_modules/
 yarn.lock
 package-lock.json
-pnpm-lock.yaml
 
 # Build
 dist/
 build/
+.output/
 .next/
 .nuxt/
 .vuepress/dist/
