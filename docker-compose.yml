@@ -32,8 +32,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - SESSION_COOKIE_NAME=ms_session
       - SESSION_COOKIE_SECURE=false
-      - RATE_LIMIT_PER_SECOND=5
-      - RATE_LIMIT_BURST=20
+      - RATE_LIMIT_PER_SECOND=100
+      - RATE_LIMIT_BURST=200
       - JELLYFIN_CLIENT_NAME=mdia-savant
       - JELLYFIN_DEVICE_NAME=mdia-savant
       - JELLYFIN_CLIENT_VERSION=0.1.0

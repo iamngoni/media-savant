@@ -88,10 +88,10 @@ impl AuthConfig {
 
 impl RateLimitConfig {
     fn from_env() -> Result<Self> {
-        let per_second = get_env_default("RATE_LIMIT_PER_SECOND", "5")?
+        let per_second = get_env_default("RATE_LIMIT_PER_SECOND", "100")?
             .parse::<u64>()
             .context("RATE_LIMIT_PER_SECOND must be an integer")?;
-        let burst = get_env_default("RATE_LIMIT_BURST", "20")?
+        let burst = get_env_default("RATE_LIMIT_BURST", "200")?
             .parse::<u32>()
             .context("RATE_LIMIT_BURST must be an integer")?;
 
