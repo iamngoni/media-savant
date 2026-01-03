@@ -66,7 +66,7 @@ This document captures the desired UI client for a Jellyfin server, plus resolve
 
 ## 9) Tech Stack
 - Frontend: TanStack Start (static build).
-- Backend: Rust API server.
+- Backend: Rust API server (Actix Web).
 - TypeScript: **yes**.
 - Styling: **Tailwind + shadcn**.
 - State management: **Zustand**.
