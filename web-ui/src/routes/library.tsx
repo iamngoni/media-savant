@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { FolderOpen } from 'lucide-react'
 
 import { useSessionStore } from '../stores/session'
-import { fetchLatest, fetchLibraries, fetchResume, imageUrl } from '../lib/jellyfin'
+import { fetchLatest, fetchLibraries, fetchResume, type JellyfinItem } from '../lib/jellyfin'
+import { MediaCarousel, MediaCard, MediaThumbnail } from '../components/media'
+import { Card } from '../components/ui'
 
 export const Route = createFileRoute('/library')({
   component: Library,
@@ -10,9 +13,10 @@ export const Route = createFileRoute('/library')({
 
 function Library() {
   const userId = useSessionStore((state) => state.userId)
-  const [libraries, setLibraries] = useState<{ Id: string; Name: string }[]>([])
-  const [resumeItems, setResumeItems] = useState<any[]>([])
-  const [latestItems, setLatestItems] = useState<any[]>([])
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated)
+  const [libraries, setLibraries] = useState<JellyfinItem[]>([])
+  const [resumeItems, setResumeItems] = useState<JellyfinItem[]>([])
+  const [latestItems, setLatestItems] = useState<JellyfinItem[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -27,84 +31,97 @@ function Library() {
       .finally(() => setLoading(false))
   }, [userId])
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-8">
+        <h2 className="text-2xl font-semibold mb-2">Sign in to view your library</h2>
+        <p className="text-foreground/60 mb-6 max-w-md">
+          Connect to your Jellyfin server to browse your media collection.
+        </p>
+        <Link
+          to="/setup"
+          className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+        >
+          Sign In
+        </Link>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <section className="grid gap-8">
-      <div>
-        <h2 className="text-3xl font-semibold">Library overview</h2>
-        <p className="mt-2 text-sm text-foreground/70">
-          Queue, resume, and keep your family profiles in sync.
+    <div className="space-y-12 py-8 pb-16">
+      {/* Page Header */}
+      <div className="px-8 lg:px-20">
+        <h1 className="text-3xl font-bold">Library</h1>
+        <p className="text-foreground/60 mt-2">
+          Browse your media collection
         </p>
       </div>
 
-      {!userId && (
-        <div className="rounded-2xl border border-muted/60 bg-muted/40 p-6 text-sm">
-          Connect your server first in <Link to="/setup" className="text-accent">Setup</Link>.
-        </div>
+      {/* Continue Watching */}
+      {resumeItems.length > 0 && (
+        <MediaCarousel title="Continue Watching" viewAllLink="/search">
+          {resumeItems.map((item) => (
+            <MediaThumbnail key={item.Id} item={item} showProgress />
+          ))}
+        </MediaCarousel>
       )}
 
-      {loading && (
-        <div className="rounded-2xl border border-muted/60 bg-muted/40 p-6 text-sm">
-          Loading library...
-        </div>
+      {/* Recently Added */}
+      {latestItems.length > 0 && (
+        <MediaCarousel title="Recently Added" viewAllLink="/search">
+          {latestItems.map((item) => (
+            <MediaThumbnail key={item.Id} item={item} showBadge showTimestamp />
+          ))}
+        </MediaCarousel>
       )}
 
-      {userId && !loading && (
-        <div className="grid gap-8">
-          <Shelf title="Continue watching" items={resumeItems} />
-          <Shelf title="Recently added" items={latestItems} />
+      {/* Libraries Grid */}
+      <section className="px-8 lg:px-20 space-y-6">
+        <h2 className="text-2xl font-semibold">Your Libraries</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {libraries.map((library) => (
+            <Link
+              key={library.Id}
+              to="/library/$libraryId"
+              params={{ libraryId: library.Id }}
+            >
+              <Card hover className="p-6 h-full">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FolderOpen className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{library.Name}</h3>
+                    <p className="text-sm text-foreground/60 mt-1">Browse collection</p>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid gap-4">
-            <h3 className="text-lg font-semibold">Libraries</h3>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {libraries.map((library) => (
-                <Link
-                  key={library.Id}
-                  to="/library/$libraryId"
-                  params={{ libraryId: library.Id }}
-                  className="rounded-2xl border border-muted/60 bg-muted/40 p-4 hover:border-accent"
-                >
-                  <p className="text-sm font-semibold">{library.Name}</p>
-                  <p className="text-xs text-foreground/60">Open library</p>
-                </Link>
-              ))}
-            </div>
+      {/* Empty State */}
+      {libraries.length === 0 && resumeItems.length === 0 && latestItems.length === 0 && (
+        <div className="min-h-[40vh] flex flex-col items-center justify-center text-center px-8">
+          <div className="w-16 h-16 rounded-full bg-muted/40 flex items-center justify-center mb-4">
+            <FolderOpen className="w-8 h-8 text-foreground/40" />
           </div>
+          <h2 className="text-xl font-semibold mb-2">No libraries found</h2>
+          <p className="text-foreground/60 max-w-md">
+            Your Jellyfin server doesn't have any libraries configured yet.
+          </p>
         </div>
       )}
-    </section>
-  )
-}
-
-function Shelf({ title, items }: { title: string; items: any[] }) {
-  if (!items?.length) return null
-  return (
-    <div className="grid gap-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <Link to="/search" className="text-xs uppercase tracking-[0.3em] text-foreground/50">
-          View all
-        </Link>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {items.map((item) => (
-          <Link
-            key={item.Id}
-            to="/item/$itemId"
-            params={{ itemId: item.Id }}
-            className="group overflow-hidden rounded-2xl border border-muted/60 bg-muted/40"
-          >
-            <div className="aspect-[3/4] w-full overflow-hidden bg-muted/80">
-              <img
-                src={imageUrl(item.Id, 320)}
-                alt={item.Name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-              />
-            </div>
-            <div className="p-3 text-xs text-foreground/70">{item.Name}</div>
-          </Link>
-        ))}
-      </div>
     </div>
   )
 }

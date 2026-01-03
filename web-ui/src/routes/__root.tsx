@@ -1,18 +1,18 @@
-import { createRootRoute, Outlet, Link } from '@tanstack/react-router'
-import { HeadContent, Scripts } from '@tanstack/react-start'
+import { createRootRoute, Outlet, HeadContent, Scripts } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import '../styles.css'
 import { fetchSession, logout as logoutSession } from '../lib/auth'
 import { useSessionStore } from '../stores/session'
+import { Header } from '../components/layout'
 
 export const Route = createRootRoute({
   component: RootLayout,
 })
 
 function RootLayout() {
-  const { isAuthenticated, username, serverUrl, setSession, clearSession } = useSessionStore()
-  const [status, setStatus] = useState<'idle' | 'loading'>('idle')
+  const { isAuthenticated, username, setSession, clearSession } = useSessionStore()
+  const [status, setStatus] = useState<'idle' | 'loading'>('loading')
 
   useEffect(() => {
     let active = true
@@ -42,59 +42,39 @@ function RootLayout() {
     }
   }, [setSession, clearSession])
 
+  const handleLogout = async () => {
+    await logoutSession()
+    clearSession()
+  }
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className="min-h-screen bg-background text-foreground">
-        <header className="border-b border-muted/50">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-accent">mdia savant</p>
-              <h1 className="text-xl font-semibold">Media Control Center</h1>
-            </div>
-            <nav className="flex items-center gap-4 text-sm text-foreground/70">
-              <Link to="/" className="hover:text-foreground">
-                Home
-              </Link>
-              <Link to="/setup" className="hover:text-foreground">
-                Setup
-              </Link>
-              <Link to="/library" className="hover:text-foreground">
-                Library
-              </Link>
-              <Link to="/search" className="hover:text-foreground">
-                Search
-              </Link>
-            </nav>
+      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
+        {status === 'loading' ? (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-          <div className="flex items-center gap-3 text-xs text-foreground/60">
-            {status === 'loading' ? (
-              <span>Checking session...</span>
-            ) : isAuthenticated ? (
-              <>
-                <span>{username}</span>
-                <span className="hidden md:inline">•</span>
-                <span className="hidden md:inline">{serverUrl}</span>
-                <button
-                  className="rounded-full border border-muted/60 px-3 py-1 text-xs"
-                  onClick={async () => {
-                    await logoutSession()
-                    clearSession()
-                  }}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <span>Not connected</span>
-            )}
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-6 py-10">
-          <Outlet />
-        </main>
+        ) : (
+          <>
+            <Header
+              isAuthenticated={isAuthenticated}
+              username={username}
+              onLogout={handleLogout}
+            />
+            <main className="pt-20">
+              <Outlet />
+            </main>
+          </>
+        )}
         <Scripts />
       </body>
     </html>
