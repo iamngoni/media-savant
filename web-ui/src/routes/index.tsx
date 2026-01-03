@@ -73,10 +73,7 @@ function Home() {
     <div className="space-y-12 pb-16">
       {/* Hero Section */}
       {heroItem && (
-        <HeroSection
-          item={heroItem}
-          relatedItems={latestItems.slice(0, 5)}
-        />
+        <HeroSection item={heroItem} />
       )}
 
       {/* Continue Watching */}

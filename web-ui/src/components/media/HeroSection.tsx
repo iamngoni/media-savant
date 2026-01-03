@@ -3,7 +3,7 @@ import { Play, Info } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
-import { backdropUrl, thumbUrl } from '../../lib/jellyfin'
+import { backdropUrl } from '../../lib/jellyfin'
 
 interface HeroSectionProps {
   item: {
@@ -20,10 +20,9 @@ interface HeroSectionProps {
     ParentId?: string
     SeriesId?: string
   }
-  relatedItems?: Array<{ Id: string; Name: string; Type?: string }>
 }
 
-export function HeroSection({ item, relatedItems = [] }: HeroSectionProps) {
+export function HeroSection({ item }: HeroSectionProps) {
   const [backdropError, setBackdropError] = useState(false)
   const isSeries = item.Type === 'Series' || item.Type === 'Episode'
   const episodeInfo = item.Type === 'Episode'
@@ -103,26 +102,6 @@ export function HeroSection({ item, relatedItems = [] }: HeroSectionProps) {
             </Link>
           </div>
         </div>
-
-        {/* Related Thumbnails */}
-        {relatedItems.length > 0 && (
-          <div className="mt-8 flex items-center gap-3">
-            {relatedItems.slice(0, 5).map((related) => (
-              <Link
-                key={related.Id}
-                to="/item/$itemId"
-                params={{ itemId: related.Id }}
-                className="w-[140px] h-[84px] rounded-lg overflow-hidden border border-muted/40 hover:border-muted/80 transition-colors"
-              >
-                <img
-                  src={thumbUrl(related.Id, 280)}
-                  alt={related.Name}
-                  className="w-full h-full object-cover"
-                />
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
     </section>
   )
