@@ -10,10 +10,23 @@ const PORT = process.env.PORT || 80
 const API_URL = process.env.API_URL || 'http://server:4001'
 
 // Proxy /api requests to the backend
-app.use('/api', createProxyMiddleware({
+// Using pathFilter instead of app.use path to preserve the /api prefix
+const apiProxy = createProxyMiddleware({
   target: API_URL,
   changeOrigin: true,
-}))
+  pathFilter: '/api',
+  on: {
+    proxyReq: (proxyReq, req) => {
+      console.log(`[Proxy] ${req.method} ${req.originalUrl} -> ${API_URL}${req.originalUrl}`)
+    },
+    error: (err, req, res) => {
+      console.error(`[Proxy Error] ${err.message}`)
+      res.status(502).json({ error: 'Proxy error', message: err.message })
+    }
+  }
+})
+
+app.use(apiProxy)
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'dist')))
