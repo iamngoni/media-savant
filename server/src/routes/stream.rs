@@ -1,28 +1,24 @@
 //
 //  media-savant-api
-//  routes/proxy.rs
+//  routes/stream.rs
 //
 
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use bytes::Bytes;
-use futures_util::TryFutureExt;
+use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+use futures_util::StreamExt;
 
 use crate::models::ApiResponse;
 use crate::routes::auth::{build_token_header, load_session, session_id_from_request};
 use crate::state::AppState;
 
 pub fn init(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/jellyfin")
-            .route("/{tail:.*}", web::to(proxy_request))
-            .route("", web::to(proxy_request)),
-    );
+    cfg.service(web::scope("/stream").service(stream_video));
 }
 
-async fn proxy_request(
+#[get("/{id}")]
+async fn stream_video(
     state: web::Data<AppState>,
     req: HttpRequest,
-    body: Bytes,
+    path: web::Path<String>,
 ) -> impl Responder {
     let Some(session_id) = session_id_from_request(&state, &req) else {
         return HttpResponse::Unauthorized().json(ApiResponse::<()>::err("Missing session"));
@@ -40,58 +36,39 @@ async fn proxy_request(
         }
     };
 
-    let tail = req.match_info().query("tail");
-    let query = req.query_string();
-    let mut target = format!("{}/{}", session.server_url.trim_end_matches('/'), tail);
-    if !query.is_empty() {
-        target.push('?');
-        target.push_str(query);
-    }
-
-    let method = req.method().clone();
-    let auth_header = build_token_header(&state, &session);
+    let item_id = path.into_inner();
+    let server_url = session.server_url.trim_end_matches('/');
+    let url = format!(
+        "{server_url}/Videos/{item_id}/stream?static=true&Container=mp4"
+    );
 
     let mut request = state
         .http
-        .request(method, target)
-        .header("X-Emby-Authorization", auth_header);
+        .get(url)
+        .header("X-Emby-Authorization", build_token_header(&state, &session));
 
-    if let Some(content_type) = req.headers().get("content-type") {
-        request = request.header("content-type", content_type.clone());
-    }
     if let Some(range) = req.headers().get("range") {
         request = request.header("range", range.clone());
     }
-    if let Some(accept) = req.headers().get("accept") {
-        request = request.header("accept", accept.clone());
-    }
 
-    let response = request.body(body).send().map_err(|err| err.to_string()).await;
-    let response = match response {
+    let response = match request.send().await {
         Ok(res) => res,
         Err(err) => {
             return HttpResponse::BadGateway().json(ApiResponse::<()>::err(format!(
-                "Proxy request failed: {err}"
+                "Streaming request failed: {err}"
             )))
         }
     };
 
     let status = response.status();
-    let content_type = response
-        .headers()
-        .get("content-type")
-        .cloned();
+    let content_type = response.headers().get("content-type").cloned();
     let content_length = response.headers().get("content-length").cloned();
     let content_range = response.headers().get("content-range").cloned();
     let accept_ranges = response.headers().get("accept-ranges").cloned();
-    let bytes = match response.bytes().await {
-        Ok(data) => data,
-        Err(err) => {
-            return HttpResponse::BadGateway().json(ApiResponse::<()>::err(format!(
-                "Failed to read Jellyfin response: {err}"
-            )))
-        }
-    };
+
+    let stream = response.bytes_stream().map(|chunk| {
+        chunk.map_err(|err| actix_web::error::ErrorBadGateway(err))
+    });
 
     let mut builder = HttpResponse::build(status);
     if let Some(content_type) = content_type {
@@ -107,5 +84,5 @@ async fn proxy_request(
         builder.insert_header(("accept-ranges", accept_ranges));
     }
 
-    builder.body(bytes)
+    builder.streaming(stream)
 }

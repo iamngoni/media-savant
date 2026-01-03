@@ -9,6 +9,7 @@ mod auth;
 mod health;
 mod proxy;
 mod setup;
+mod stream;
 
 pub fn init(cfg: &mut ServiceConfig) {
     cfg.service(
@@ -16,6 +17,7 @@ pub fn init(cfg: &mut ServiceConfig) {
             .configure(health::init)
             .configure(auth::init)
             .configure(proxy::init)
-            .configure(setup::init),
+            .configure(setup::init)
+            .configure(stream::init),
     );
 }

@@ -21,7 +21,11 @@ function RootLayout() {
       .then((res) => {
         if (!active) return
         if (res?.data) {
-          setSession({ username: res.data.username, serverUrl: res.data.server_url })
+          setSession({
+            username: res.data.username,
+            serverUrl: res.data.server_url,
+            userId: res.data.user_id,
+          })
         } else {
           clearSession()
         }
@@ -59,6 +63,9 @@ function RootLayout() {
               </Link>
               <Link to="/library" className="hover:text-foreground">
                 Library
+              </Link>
+              <Link to="/search" className="hover:text-foreground">
+                Search
               </Link>
             </nav>
           </div>

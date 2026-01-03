@@ -56,7 +56,11 @@ function Setup() {
       })
 
       if (auth?.data) {
-        setSession({ username: auth.data.username, serverUrl: auth.data.server_url })
+        setSession({
+          username: auth.data.username,
+          serverUrl: auth.data.server_url,
+          userId: auth.data.user_id,
+        })
         setStatus('Connected and session saved.')
       } else {
         setError(auth?.error ?? 'Login failed.')
