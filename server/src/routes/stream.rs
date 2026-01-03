@@ -38,8 +38,9 @@ async fn stream_video(
 
     let item_id = path.into_inner();
     let server_url = session.server_url.trim_end_matches('/');
+    // Use direct stream with mediaSourceId for proper playback
     let url = format!(
-        "{server_url}/Videos/{item_id}/stream?static=true&Container=mp4"
+        "{server_url}/Videos/{item_id}/stream.mp4?static=true&mediaSourceId={item_id}"
     );
 
     let mut request = state

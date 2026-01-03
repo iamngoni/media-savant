@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { Play, Plus, Heart, Share2, Star, ChevronRight } from 'lucide-react'
+import { Play, Plus, Heart, Share2, Star } from 'lucide-react'
 
 import { useSessionStore } from '../stores/session'
 import {
@@ -97,6 +97,14 @@ function ItemDetail() {
   const directors = item.People?.filter((p) => p.Type === 'Director') ?? []
   const writers = item.People?.filter((p) => p.Type === 'Writer') ?? []
 
+  // For episodes, use series backdrop; for others use item backdrop
+  const getBackdropId = () => {
+    if (isEpisode && item.SeriesId) {
+      return item.SeriesId
+    }
+    return item.Id
+  }
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'episodes', label: 'Episodes' },
     { id: 'cast', label: 'Cast & Crew' },
@@ -130,7 +138,7 @@ function ItemDetail() {
         {/* Backdrop */}
         <div className="absolute inset-0">
           <img
-            src={backdropUrl(item.Id)}
+            src={backdropUrl(getBackdropId())}
             alt={item.Name}
             className="w-full h-full object-cover"
           />
@@ -152,6 +160,11 @@ function ItemDetail() {
 
             {/* Info */}
             <div className="max-w-2xl space-y-5">
+              {/* Episode: Show series name above */}
+              {isEpisode && item.SeriesName && (
+                <p className="text-sm text-foreground/60 uppercase tracking-wider">{item.SeriesName}</p>
+              )}
+
               <h1 className="text-4xl lg:text-5xl font-bold">{item.Name}</h1>
 
               {/* Metadata Row */}
@@ -165,7 +178,12 @@ function ItemDetail() {
                 {isSeries && seasons.length > 0 && (
                   <span className="text-sm text-foreground/70">{seasons.length} Seasons</span>
                 )}
-                {isMovie && item.RunTimeTicks && (
+                {isEpisode && item.ParentIndexNumber && item.IndexNumber && (
+                  <span className="text-sm text-foreground/70">
+                    Season {item.ParentIndexNumber} • Episode {item.IndexNumber}
+                  </span>
+                )}
+                {(isMovie || isEpisode) && item.RunTimeTicks && (
                   <span className="text-sm text-foreground/70">
                     {Math.round(item.RunTimeTicks / 10000000 / 60)} min
                   </span>

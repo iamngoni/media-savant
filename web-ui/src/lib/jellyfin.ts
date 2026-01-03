@@ -13,6 +13,7 @@ export type JellyfinItem = {
   Name: string
   Type: string
   ParentId?: string
+  SeriesId?: string
   ProductionYear?: number
   Overview?: string
   RunTimeTicks?: number
