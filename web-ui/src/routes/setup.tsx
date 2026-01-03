@@ -39,7 +39,7 @@ function Setup() {
   const setSession = useSessionStore((state) => state.setSession)
 
   const serverUrl = `${form.protocol}://${form.host}${form.port ? `:${form.port}` : ''}${
-    form.basePath ? `/${form.basePath.replace(/^\\//, '')}` : ''
+    form.basePath ? `/${form.basePath.replace(/^\//, '')}` : ''
   }`
 
   const handleVerify = async () => {
