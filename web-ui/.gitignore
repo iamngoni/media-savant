@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Build
+dist/
+build/
+.next/
+.nuxt/
+.vuepress/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+.DS_Store
+
+# Runtime
+.cache/
+.tmp/
+
+# OS
+Thumbs.db
