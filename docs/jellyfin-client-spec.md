@@ -33,7 +33,7 @@ This document captures the desired UI client for a Jellyfin server, plus resolve
 - Rate limiting / brute-force protections on login: **yes**.
 
 ## 5) Networking + Proxy
-- Use backend proxy (server-side) to talk to Jellyfin.
+- Use backend proxy (Rust API) to talk to Jellyfin.
 - Hiding base URL from browser: **doesn’t matter**.
 - Access pattern: local LAN + remote (Tailscale).
 
@@ -65,7 +65,8 @@ This document captures the desired UI client for a Jellyfin server, plus resolve
 - Background audio: **yes**.
 
 ## 9) Tech Stack
-- Framework: **TanStack Start** (SSR).
+- Frontend: TanStack Start (static build).
+- Backend: Rust API server.
 - TypeScript: **yes**.
 - Styling: **Tailwind + shadcn**.
 - State management: **Zustand**.
@@ -99,7 +100,7 @@ This document captures the desired UI client for a Jellyfin server, plus resolve
 3) **Data model for playlists / play queues**: confirm expected behavior (server playlists vs local queues).
 4) **Analytics stack**: choose specific self-hosted solution (e.g., Plausible, Umami, PostHog).
 5) **Rate limiting**: preferred approach (Traefik middleware vs app-level).
-6) **SSR auth details**: confirm cookie/session strategy and refresh logic.
+6) **Auth details**: confirm cookie/session strategy and refresh logic for Rust API.
 
 ## Proposed Acceptance Criteria (Draft)
 - First-run wizard connects to Jellyfin and authenticates successfully.
@@ -113,4 +114,3 @@ This document captures the desired UI client for a Jellyfin server, plus resolve
 - Casting option is present (actual support may vary by device).
 - Logout/forget server clears session.
 - Works on Chrome, Safari, Firefox, Edge (desktop).
-
