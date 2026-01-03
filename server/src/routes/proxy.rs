@@ -3,7 +3,7 @@
 //  routes/proxy.rs
 //
 
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use actix_web::{http::StatusCode, web, HttpRequest, HttpResponse, Responder};
 use bytes::Bytes;
 use futures_util::TryFutureExt;
 
@@ -48,7 +48,13 @@ async fn proxy_request(
         target.push_str(query);
     }
 
-    let method = req.method().clone();
+    let method = match reqwest::Method::from_bytes(req.method().as_str().as_bytes()) {
+        Ok(method) => method,
+        Err(_) => {
+            return HttpResponse::MethodNotAllowed()
+                .json(ApiResponse::<()>::err("Unsupported HTTP method"))
+        }
+    };
     let auth_header = build_token_header(&state, &session);
 
     let mut request = state
@@ -56,14 +62,15 @@ async fn proxy_request(
         .request(method, target)
         .header("X-Emby-Authorization", auth_header);
 
-    if let Some(content_type) = req.headers().get("content-type") {
-        request = request.header("content-type", content_type.clone());
+    if let Some(content_type) = req.headers().get("content-type").and_then(|val| val.to_str().ok())
+    {
+        request = request.header("content-type", content_type);
     }
-    if let Some(range) = req.headers().get("range") {
-        request = request.header("range", range.clone());
+    if let Some(range) = req.headers().get("range").and_then(|val| val.to_str().ok()) {
+        request = request.header("range", range);
     }
-    if let Some(accept) = req.headers().get("accept") {
-        request = request.header("accept", accept.clone());
+    if let Some(accept) = req.headers().get("accept").and_then(|val| val.to_str().ok()) {
+        request = request.header("accept", accept);
     }
 
     let response = request.body(body).send().map_err(|err| err.to_string()).await;
@@ -76,14 +83,21 @@ async fn proxy_request(
         }
     };
 
-    let status = response.status();
-    let content_type = response
+    let status = StatusCode::from_u16(response.status().as_u16())
+        .unwrap_or(StatusCode::BAD_GATEWAY);
+    let content_type = response.headers().get("content-type").and_then(|val| val.to_str().ok());
+    let content_length = response
         .headers()
-        .get("content-type")
-        .cloned();
-    let content_length = response.headers().get("content-length").cloned();
-    let content_range = response.headers().get("content-range").cloned();
-    let accept_ranges = response.headers().get("accept-ranges").cloned();
+        .get("content-length")
+        .and_then(|val| val.to_str().ok());
+    let content_range = response
+        .headers()
+        .get("content-range")
+        .and_then(|val| val.to_str().ok());
+    let accept_ranges = response
+        .headers()
+        .get("accept-ranges")
+        .and_then(|val| val.to_str().ok());
     let bytes = match response.bytes().await {
         Ok(data) => data,
         Err(err) => {

@@ -186,7 +186,11 @@ async fn save_session(
     let key = format!("session:{}", session.session_id);
     let value = serde_json::to_string(session)?;
 
-    redis::cmd("SET").arg(&key).arg(value).query_async(&mut *conn).await?;
+    redis::cmd("SET")
+        .arg(&key)
+        .arg(value)
+        .query_async::<_, ()>(&mut *conn)
+        .await?;
     Ok(())
 }
 
@@ -196,7 +200,10 @@ async fn delete_session(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut conn = state.redis.lock().await;
     let key = format!("session:{session_id}");
-    redis::cmd("DEL").arg(&key).query_async(&mut *conn).await?;
+    redis::cmd("DEL")
+        .arg(&key)
+        .query_async::<_, ()>(&mut *conn)
+        .await?;
     Ok(())
 }
 

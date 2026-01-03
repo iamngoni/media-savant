@@ -3,7 +3,7 @@
 //  routes/stream.rs
 //
 
-use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{get, http::StatusCode, web, HttpRequest, HttpResponse, Responder};
 use futures_util::StreamExt;
 
 use crate::models::ApiResponse;
@@ -47,8 +47,8 @@ async fn stream_video(
         .get(url)
         .header("X-Emby-Authorization", build_token_header(&state, &session));
 
-    if let Some(range) = req.headers().get("range") {
-        request = request.header("range", range.clone());
+    if let Some(range) = req.headers().get("range").and_then(|val| val.to_str().ok()) {
+        request = request.header("range", range);
     }
 
     let response = match request.send().await {
@@ -60,11 +60,12 @@ async fn stream_video(
         }
     };
 
-    let status = response.status();
-    let content_type = response.headers().get("content-type").cloned();
-    let content_length = response.headers().get("content-length").cloned();
-    let content_range = response.headers().get("content-range").cloned();
-    let accept_ranges = response.headers().get("accept-ranges").cloned();
+    let status = StatusCode::from_u16(response.status().as_u16())
+        .unwrap_or(StatusCode::BAD_GATEWAY);
+    let content_type = response.headers().get("content-type").and_then(|val| val.to_str().ok());
+    let content_length = response.headers().get("content-length").and_then(|val| val.to_str().ok());
+    let content_range = response.headers().get("content-range").and_then(|val| val.to_str().ok());
+    let accept_ranges = response.headers().get("accept-ranges").and_then(|val| val.to_str().ok());
 
     let stream = response.bytes_stream().map(|chunk| {
         chunk.map_err(|err| actix_web::error::ErrorBadGateway(err))
