@@ -62,10 +62,26 @@ async fn stream_video(
 
     let status = StatusCode::from_u16(response.status().as_u16())
         .unwrap_or(StatusCode::BAD_GATEWAY);
-    let content_type = response.headers().get("content-type").and_then(|val| val.to_str().ok());
-    let content_length = response.headers().get("content-length").and_then(|val| val.to_str().ok());
-    let content_range = response.headers().get("content-range").and_then(|val| val.to_str().ok());
-    let accept_ranges = response.headers().get("accept-ranges").and_then(|val| val.to_str().ok());
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|val| val.to_str().ok())
+        .map(|val| val.to_string());
+    let content_length = response
+        .headers()
+        .get("content-length")
+        .and_then(|val| val.to_str().ok())
+        .map(|val| val.to_string());
+    let content_range = response
+        .headers()
+        .get("content-range")
+        .and_then(|val| val.to_str().ok())
+        .map(|val| val.to_string());
+    let accept_ranges = response
+        .headers()
+        .get("accept-ranges")
+        .and_then(|val| val.to_str().ok())
+        .map(|val| val.to_string());
 
     let stream = response.bytes_stream().map(|chunk| {
         chunk.map_err(|err| actix_web::error::ErrorBadGateway(err))
