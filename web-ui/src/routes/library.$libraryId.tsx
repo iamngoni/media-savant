@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { ArrowLeft, Grid, List } from 'lucide-react'
 
 import { useSessionStore } from '../stores/session'
-import { fetchItemsByParent, imageUrl } from '../lib/jellyfin'
+import { fetchItemsByParent, type JellyfinItem } from '../lib/jellyfin'
+import { MediaCard } from '../components/media'
+import { Button } from '../components/ui'
 
 export const Route = createFileRoute('/library/$libraryId')({
   component: LibraryDetail,
@@ -11,7 +14,7 @@ export const Route = createFileRoute('/library/$libraryId')({
 function LibraryDetail() {
   const { libraryId } = Route.useParams()
   const userId = useSessionStore((state) => state.userId)
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<JellyfinItem[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -22,37 +25,59 @@ function LibraryDetail() {
       .finally(() => setLoading(false))
   }, [userId, libraryId])
 
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <section className="grid gap-6">
-      <div>
-        <Link to="/library" className="text-xs uppercase tracking-[0.3em] text-foreground/60">
+    <div className="py-8 pb-16 space-y-8">
+      {/* Header */}
+      <div className="px-8 lg:px-20 space-y-4">
+        <Link
+          to="/library"
+          className="inline-flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
           Back to libraries
         </Link>
-        <h2 className="mt-2 text-3xl font-semibold">Library items</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Library</h1>
+            <p className="text-foreground/60 mt-1">{items.length} items</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" className="px-3">
+              <Grid className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="px-3">
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {loading && <p className="text-sm text-foreground/60">Loading items...</p>}
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {items.map((item) => (
-          <Link
-            key={item.Id}
-            to="/item/$itemId"
-            params={{ itemId: item.Id }}
-            className="group overflow-hidden rounded-2xl border border-muted/60 bg-muted/40"
-          >
-            <div className="aspect-[3/4] w-full overflow-hidden bg-muted/80">
-              <img
-                src={imageUrl(item.Id, 320)}
-                alt={item.Name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-              />
-            </div>
-            <div className="p-3 text-xs text-foreground/70">{item.Name}</div>
-          </Link>
-        ))}
+      {/* Items Grid */}
+      <div className="px-8 lg:px-20">
+        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {items.map((item) => (
+            <MediaCard key={item.Id} item={item} showRating />
+          ))}
+        </div>
       </div>
-    </section>
+
+      {/* Empty State */}
+      {items.length === 0 && (
+        <div className="min-h-[40vh] flex flex-col items-center justify-center text-center px-8">
+          <h2 className="text-xl font-semibold mb-2">No items found</h2>
+          <p className="text-foreground/60 max-w-md">
+            This library doesn't have any content yet.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }
