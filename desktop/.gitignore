@@ -1,0 +1,37 @@
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcworkspace
+xcuserdata/
+*.xcodeproj/xcuserdata/
+DerivedData/
+*.build/
+
+# Swift
+.DS_Store
+*.swiftpm
+.swiftpm/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Dependencies
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Build artifacts
+build/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.env
+.env.local
