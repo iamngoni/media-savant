@@ -1,12 +1,9 @@
-# Rust Service Structure Reference (tgfees + tgauth)
+# Rust Service Structure Reference
 
 Last updated: 2026-01-03
 
-This doc summarizes the Rust service layout and patterns from:
-- `/Users/modestnerd/Developer/Projects/tgpatcher/tgfees`
-- `/Users/modestnerd/Developer/Projects/tgpatcher/tgauth`
-
-Use these as the baseline structure for new Rust services in this repo.
+This doc summarizes the Rust service layout and patterns to use as the baseline structure
+for new Rust services in this repo.
 
 ## 1) Shared Structure Pattern
 
@@ -32,7 +29,7 @@ Key patterns:
 - `state.rs` defines `AppState` with shared resources, wrapped in `Arc` or `Data`.
 - `config` module reads env vars, validates required values, and builds config struct(s).
 
-## 2) tgfees (Actix + Postgres)
+## 2) Example A (Actix + Postgres)
 
 ### Core modules
 - `src/main.rs`: Actix server setup, Sentry, logging, CORS, rate limiting, JSON error handling.
@@ -52,7 +49,7 @@ Key patterns:
 - Initialize DB pool and shared caches inside `main.rs`.
 - Wrap `AppState` in `Arc` and `web::Data`.
 
-## 3) tgauth (Actix + Redis)
+## 3) Example B (Actix + Redis)
 
 ### Core modules
 - `src/main.rs`: Actix server, CORS, Logger, routes.
@@ -101,4 +98,3 @@ Design notes (aligned to your patterns):
   - configure routes
 - `routes/mod.rs` should expose `init(cfg: &mut ServiceConfig)` with scoped routes.
 - `state.rs` should carry Redis, config, and any in-memory caches.
-
