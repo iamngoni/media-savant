@@ -13,10 +13,11 @@ RUN pnpm build
 FROM node:22-alpine
 WORKDIR /app
 
-COPY --from=builder /app/.output ./.output
+RUN npm install -g serve
+
+COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
-ENV PORT=80
 
 EXPOSE 80
-CMD ["node", ".output/server/index.mjs"]
+CMD ["serve", "-s", "dist", "-l", "80"]

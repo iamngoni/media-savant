@@ -1,7 +1,6 @@
-import { createRootRoute, Outlet, HeadContent, Scripts } from '@tanstack/react-router'
+import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
-import '../styles.css'
 import { fetchSession, logout as logoutSession } from '../lib/auth'
 import { useSessionStore } from '../stores/session'
 import { Header } from '../components/layout'
@@ -47,36 +46,24 @@ function RootLayout() {
     clearSession()
   }
 
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
-        {status === 'loading' ? (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <>
-            <Header
-              isAuthenticated={isAuthenticated}
-              username={username}
-              onLogout={handleLogout}
-            />
-            <main className="pt-20">
-              <Outlet />
-            </main>
-          </>
-        )}
-        <Scripts />
-      </body>
-    </html>
+    <div className="min-h-screen bg-background text-foreground font-sans antialiased">
+      <Header
+        isAuthenticated={isAuthenticated}
+        username={username}
+        onLogout={handleLogout}
+      />
+      <main className="pt-20">
+        <Outlet />
+      </main>
+    </div>
   )
 }
