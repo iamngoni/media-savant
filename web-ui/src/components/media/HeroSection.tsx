@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router'
 import { Play, Info } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
-import { backdropUrl, imageUrl } from '../../lib/jellyfin'
+import { backdropUrl, thumbUrl } from '../../lib/jellyfin'
 
 interface HeroSectionProps {
   item: {
@@ -16,24 +17,40 @@ interface HeroSectionProps {
     SeasonName?: string
     IndexNumber?: number
     ParentIndexNumber?: number
+    ParentId?: string
+    SeriesId?: string
   }
-  relatedItems?: Array<{ Id: string; Name: string }>
+  relatedItems?: Array<{ Id: string; Name: string; Type?: string }>
 }
 
 export function HeroSection({ item, relatedItems = [] }: HeroSectionProps) {
+  const [backdropError, setBackdropError] = useState(false)
   const isSeries = item.Type === 'Series' || item.Type === 'Episode'
   const episodeInfo = item.Type === 'Episode'
     ? `S${item.ParentIndexNumber} E${item.IndexNumber}`
     : null
+
+  // For episodes, try to use the series backdrop first
+  const getBackdropId = () => {
+    if (item.Type === 'Episode' && item.SeriesId) {
+      return item.SeriesId
+    }
+    return item.Id
+  }
+
+  // Fallback chain for backdrop
+  const primaryBackdropId = getBackdropId()
+  const fallbackBackdropId = item.ParentId || item.Id
 
   return (
     <section className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
       {/* Backdrop Image */}
       <div className="absolute inset-0">
         <img
-          src={backdropUrl(item.Id)}
+          src={backdropUrl(backdropError ? fallbackBackdropId : primaryBackdropId)}
           alt={item.Name}
           className="w-full h-full object-cover"
+          onError={() => !backdropError && setBackdropError(true)}
         />
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-hero" />
@@ -98,7 +115,7 @@ export function HeroSection({ item, relatedItems = [] }: HeroSectionProps) {
                 className="w-[140px] h-[84px] rounded-lg overflow-hidden border border-muted/40 hover:border-muted/80 transition-colors"
               >
                 <img
-                  src={imageUrl(related.Id, 280)}
+                  src={thumbUrl(related.Id, 280)}
                   alt={related.Name}
                   className="w-full h-full object-cover"
                 />

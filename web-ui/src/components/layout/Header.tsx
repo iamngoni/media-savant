@@ -1,22 +1,16 @@
 import { Link } from '@tanstack/react-router'
 import { Search, Bell, User, LogOut } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import type { Library } from '../../stores/session'
 
 interface HeaderProps {
   isAuthenticated: boolean
   username?: string
+  libraries?: Library[]
   onLogout?: () => void
 }
 
-const navLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/library', label: 'Movies' },
-  { to: '/library', label: 'TV Shows' },
-  { to: '/library', label: 'Music' },
-  { to: '/library', label: 'Photos' },
-] as const
-
-export function Header({ isAuthenticated, username, onLogout }: HeaderProps) {
+export function Header({ isAuthenticated, username, libraries = [], onLogout }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-muted/30">
       <div className="flex items-center justify-between px-8 lg:px-20 py-5">
@@ -27,16 +21,26 @@ export function Header({ isAuthenticated, username, onLogout }: HeaderProps) {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+            <Link
+              to="/"
+              className={cn(
+                'text-sm font-medium text-foreground/60 hover:text-foreground transition-colors',
+                '[&.active]:text-foreground'
+              )}
+            >
+              Home
+            </Link>
+            {libraries.map((lib) => (
               <Link
-                key={link.label}
-                to={link.to}
+                key={lib.Id}
+                to="/library/$libraryId"
+                params={{ libraryId: lib.Id }}
                 className={cn(
                   'text-sm font-medium text-foreground/60 hover:text-foreground transition-colors',
                   '[&.active]:text-foreground'
                 )}
               >
-                {link.label}
+                {lib.Name}
               </Link>
             ))}
           </nav>

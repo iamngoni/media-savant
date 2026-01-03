@@ -148,6 +148,10 @@ export function backdropUrl(itemId: string, width = 1920) {
   return `/api/jellyfin/Items/${itemId}/Images/Backdrop?fillWidth=${width}&quality=80`
 }
 
+export function thumbUrl(itemId: string, width = 480) {
+  return `/api/jellyfin/Items/${itemId}/Images/Thumb?fillWidth=${width}&quality=80`
+}
+
 export function streamUrl(itemId: string) {
   return `/api/stream/${itemId}`
 }
